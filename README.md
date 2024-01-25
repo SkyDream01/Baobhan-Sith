@@ -13,9 +13,7 @@ Ensure that Python 3 is installed in your environment, and then execute the foll
 ```bash
 pip install -r requirements.txt
 ```
-## Contribution
-If you wish to contribute to the project, please follow the guidelines outlined in CONTRIBUTING.md.
 
 ## License
-Baobhan-Sith is licensed under the Apache License 2.0 - see the LICENSE file for more details.
+Baobhan-Sith is licensed under the Apache License 2.0 - see the [LICENSE](https://www.apache.org/licenses/LICENSE-2.0.html) file for more details.
 Feel free to let me know if you have any specific changes or if there's anything else you'd like to add!
