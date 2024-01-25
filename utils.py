@@ -125,22 +125,27 @@ def delete_temp_files():
             pass
 
 
-def overwrite_binary(binary_end, binary_message):
-    if len(binary_end) >= (128 + len(binary_message)):
+def overwrite_binary(binary_end, binary_message, binary_sign):
+    if len(binary_end) >= (128 + len(binary_message) +128 + len(binary_sign)):
         #print(len(binary_end))
         # 计算 binary_message 的长度，并将二进制数据
         message_length = len(binary_message)
-        binary_length = bin(message_length)[2:].zfill(128)
+        sign_length = len(binary_sign)
+        binary_message_length = bin(message_length)[2:].zfill(128)
+        binary_sign_length = bin(sign_length)[2:].zfill(128)
  
         binary_message_list = list(binary_message)
         binary_end_list = list(binary_end)
-        binary_length_list = list(binary_length)
+        binary_message_length_list = list(binary_message_length)
+        binary_sign_list = list(binary_sign)
+        binary_sign_length_list = list(binary_sign_length)
 
         # 在 binary_end 的前 128 字节写入长度标记
-        binary_end_list[:128] = binary_length_list
+        binary_end_list[:128] = binary_message_length_list
         # 将 binary_message 覆写到 binary_end，保留原来的部分
         binary_end_list[128:128+len(binary_message)] = binary_message_list
-        #print(len(binary_end_list))
+        binary_end_list[128+len(binary_message):128+len(binary_message)+128] = binary_sign_length_list
+        binary_end_list[128+len(binary_message)+128:128+len(binary_message)+128+len(binary_sign)] = binary_sign_list
         return ''.join(binary_end_list)
     else:
         # 如果binary_end较小，可以选择抛出异常或执行其他操作
@@ -157,4 +162,8 @@ def read_binary_message(binary_end):
     # 从binary_end的128到128+message_length字节之间读取binary_message
     binary_message = binary_end[128:128 + message_length]
 
-    return binary_message
+    sign_length_bytes = binary_end[128 + message_length:128 + message_length+128]
+    sign_length = int(sign_length_bytes, 2)
+    sign = binary_end[128+message_length+128: 128 + message_length + 128 + sign_length]
+    return binary_message, sign
+

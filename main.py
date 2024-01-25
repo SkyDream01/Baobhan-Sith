@@ -3,37 +3,37 @@ from RSA import *
 from config import *
 
 
-def encode_message2img(private_key,public_key):
+def encode_message2img(private_key, public_key):
     image_name = input("请输入图片名称：")
     encrypted_image = ImageProcessor("encrypted_image",image_name)
     message = input("请输入要加密的信息：")
     encrypted_message = encrypt_with_public_key(message, public_key)
+    sign = sign_message(message, private_key)
     #print("加密后的信息：", encrypted_message)
-    zero_count, one_count = encrypted_image.image_decode()
-    #print(f"0的数量:{zero_count}")
-    #print(f"1的数量:{one_count}")
+    encrypted_image.image_decode()
     temp_file = encrypted_image.name + "_PBE.tem"
     with open(temp_file, 'r') as file:
         binary_ends = file.read()  # 读取文件
     binary_message = encode_massage(encrypted_message)
-    binary_ends = overwrite_binary(binary_ends, binary_message) 
+    binary_sign = encode_massage(sign)
+    binary_ends = overwrite_binary(binary_ends, binary_message, binary_sign)
     with open(temp_file, 'w') as file:
         file.write(binary_ends)
     encrypted_image.image_encode()
 
 
-def decode_img2message(private_key,public_key):
+def decode_img2message(private_key, public_key):
     image_name = input("请输入图片名称：")
     decrypted_image = ImageProcessor("decrypted_image",image_name)
-    zero_count, one_count = decrypted_image.image_decode()
-    #print(f"0的数量:{zero_count}")
-    #print(f"1的数量:{one_count}")
+    decrypted_image.image_decode()
     temp_file = decrypted_image.name + "_PBE.tem"
     with open(temp_file, 'r') as file:
         binary_ends = file.read()  # 读取文件
-    binary_message =read_binary_message(binary_ends)
+    binary_message ,binary_sign =read_binary_message(binary_ends)
     encrypted_message = decode_massage(binary_message)
+    sign = decode_massage(binary_sign)
     decrypted_message = decrypt_with_private_key(encrypted_message, private_key)
+    verify_signature(decrypted_message, sign, public_key)
     print(decrypted_message)
 
 

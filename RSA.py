@@ -52,11 +52,12 @@ def sign_message(message, private_key_bytes):
 
 
 # 使用公钥验证签名
-def verify_signature(message, signature, public_key_bytes):
+def verify_signature(message, signature_bytes, public_key_bytes):
     public_key = serialization.load_pem_public_key(
         public_key_bytes,
         backend=default_backend()
     )
+    signature = eval(signature_bytes)
     try:
         public_key.verify(
             signature,
@@ -67,6 +68,7 @@ def verify_signature(message, signature, public_key_bytes):
             ),
             hashes.SHA256()
         )
+        print("Signature is valid.")
         return True
     except Exception as e:
         print("Signature is invalid:", str(e))
