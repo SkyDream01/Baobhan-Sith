@@ -126,26 +126,25 @@ def delete_temp_files():
 
 
 def overwrite_binary(binary_end, binary_message, binary_sign):
-    if len(binary_end) >= (128 + len(binary_message) +128 + len(binary_sign)):
+    if len(binary_end) >= (64 + len(binary_message) + 16 + len(binary_sign)):
         #print(len(binary_end))
         # 计算 binary_message 的长度，并将二进制数据
         message_length = len(binary_message)
         sign_length = len(binary_sign)
-        binary_message_length = bin(message_length)[2:].zfill(128)
-        binary_sign_length = bin(sign_length)[2:].zfill(128)
- 
+        binary_message_length = bin(message_length)[2:].zfill(64)
+        binary_sign_length = bin(sign_length)[2:].zfill(16)
         binary_message_list = list(binary_message)
         binary_end_list = list(binary_end)
         binary_message_length_list = list(binary_message_length)
         binary_sign_list = list(binary_sign)
         binary_sign_length_list = list(binary_sign_length)
 
-        # 在 binary_end 的前 128 字节写入长度标记
-        binary_end_list[:128] = binary_message_length_list
+        # 在 binary_end 的前 64 字节写入长度标记
+        binary_end_list[:64] = binary_message_length_list
         # 将 binary_message 覆写到 binary_end，保留原来的部分
-        binary_end_list[128:128+len(binary_message)] = binary_message_list
-        binary_end_list[128+len(binary_message):128+len(binary_message)+128] = binary_sign_length_list
-        binary_end_list[128+len(binary_message)+128:128+len(binary_message)+128+len(binary_sign)] = binary_sign_list
+        binary_end_list[64:64+len(binary_message)] = binary_message_list
+        binary_end_list[64+len(binary_message):64+len(binary_message)+16] = binary_sign_length_list
+        binary_end_list[64+len(binary_message)+16:64+len(binary_message)+16+len(binary_sign)] = binary_sign_list
         return ''.join(binary_end_list)
     else:
         # 如果binary_end较小，可以选择抛出异常或执行其他操作
@@ -153,17 +152,17 @@ def overwrite_binary(binary_end, binary_message, binary_sign):
 
 
 def read_binary_message(binary_end):
-    # 从binary_end的前128字节读取message_length
-    message_length_bytes = binary_end[:128]
+    # 从binary_end的前64字节读取message_length
+    message_length_bytes = binary_end[:64]
 
     # 将message_length解码为整数
     message_length = int(message_length_bytes, 2)
 
-    # 从binary_end的128到128+message_length字节之间读取binary_message
-    binary_message = binary_end[128:128 + message_length]
+    # 从binary_end的64到64+message_length字节之间读取binary_message
+    binary_message = binary_end[64:64 + message_length]
 
-    sign_length_bytes = binary_end[128 + message_length:128 + message_length+128]
+    sign_length_bytes = binary_end[64 + message_length:64 + message_length+16]
     sign_length = int(sign_length_bytes, 2)
-    sign = binary_end[128+message_length+128: 128 + message_length + 128 + sign_length]
+    sign = binary_end[64+message_length+16: 64+ message_length + 16 + sign_length]
     return binary_message, sign
 
