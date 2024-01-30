@@ -2,6 +2,8 @@ from PIL import Image
 import os
 import glob
 from constants import *
+from RSA import *
+from config import *
 
 
 class ImageProcessor:
@@ -54,7 +56,6 @@ class ImageProcessor:
             for y in range(self.image.size[1]):
                 for x in range(self.image.size[0]):
                     pixel = list(pixels[x, y])
-                    #print(f"index: {index}, len(binary_ends): {len(binary_ends)}")
                     pixel[0] = (pixel[0] & 0xFE) | int(binary_ends[index], 2)  # 设置红色通道的最低位
                     pixels[x, y] = tuple(pixel)
                     index += 1
@@ -127,7 +128,6 @@ def delete_temp_files():
 
 def overwrite_binary(binary_end, binary_message, binary_sign):
     if len(binary_end) >= (64 + len(binary_message) + 16 + len(binary_sign)):
-        #print(len(binary_end))
         # 计算 binary_message 的长度，并将二进制数据
         message_length = len(binary_message)
         sign_length = len(binary_sign)
@@ -163,6 +163,111 @@ def read_binary_message(binary_end):
 
     sign_length_bytes = binary_end[64 + message_length:64 + message_length+16]
     sign_length = int(sign_length_bytes, 2)
-    sign = binary_end[64+message_length+16: 64+ message_length + 16 + sign_length]
+    sign = binary_end[64+message_length+16: 64 + message_length + 16 + sign_length]
     return binary_message, sign
 
+
+# 获取input文件夹内的图片(.png/.jpg/.jpeg/.bmp)文件名
+def scan_img():
+    img_list = []
+    for file in os.listdir(input_path):
+        if file.endswith(".png") or file.endswith(".jpg") or file.endswith(".jpeg") or file.endswith(".bmp"):
+            img_list.append(file)
+    return img_list
+
+
+# 获取公钥文件名
+def scan_public_key():
+    public_key_list = []
+    for file in os.listdir(key_path):
+        if file.endswith("public_key.pem"):
+            public_key_list.append(file)
+    return public_key_list
+
+
+def load_img():
+    img_list = scan_img()
+    n = 1
+    print("可选的图片：")
+    for img in img_list:
+        print(f"{n}：{img}")
+        n += 1
+    selection = int(input("请选择要加载的图片："))
+    return img_list[selection-1]
+
+
+def load_public_key_name():
+    public_key_list = scan_public_key()
+    n = 1
+    print("可选的公钥：")
+    for public_key in public_key_list:
+        print(f"{n}：{public_key}")
+        n += 1
+    selection = int(input("请选择要加载的公钥："))
+    return public_key_list[selection-1]
+
+
+def welcome():
+    print("""
+______             _     _                      _____ _ _   _     
+| ___ \           | |   | |                    /  ___(_| | | |    
+| |_/ / __ _  ___ | |__ | |__   __ _ _ __ _____\ `--. _| |_| |__  
+| ___ \/ _` |/ _ \| '_ \| '_ \ / _` | '_ |______`--. | | __| '_ \ 
+| |_/ | (_| | (_) | |_) | | | | (_| | | | |    /\__/ | | |_| | | |
+\____/ \__,_|\___/|_.__/|_| |_|\__,_|_| |_|    \____/|_|\__|_| |_|                                                                                                                              
+
+Version：0.1.2
+          
+          """)
+
+
+def encode_message2img(private_key, public_key):
+    image_name = load_img()
+    encrypted_image = ImageProcessor("encrypted_image",image_name)
+    message = input("请输入要加密的信息：")
+    encrypted_message = encrypt_with_public_key(message, public_key)
+    sign = sign_message(message, private_key)
+    encrypted_image.image_decode()
+    temp_file = encrypted_image.name + "_PBE.tem"
+    with open(temp_file, 'r') as file:
+        binary_ends = file.read()  # 读取文件
+    binary_message = encode_massage(encrypted_message)
+    binary_sign = encode_massage(sign)
+    binary_ends = overwrite_binary(binary_ends, binary_message, binary_sign)
+    with open(temp_file, 'w') as file:
+        file.write(binary_ends)
+    encrypted_image.image_encode()
+
+
+def decode_img2message(private_key, public_key):
+    image_name = load_img()
+    decrypted_image = ImageProcessor("decrypted_image",image_name)
+    decrypted_image.image_decode()
+    temp_file = decrypted_image.name + "_PBE.tem"
+    with open(temp_file, 'r') as file:
+        binary_ends = file.read()  # 读取文件
+    binary_message, binary_sign =read_binary_message(binary_ends)
+    encrypted_message = decode_massage(binary_message)
+    sign = decode_massage(binary_sign)
+    decrypted_message = decrypt_with_private_key(encrypted_message, private_key)
+    verify_signature(decrypted_message, sign, public_key)
+    print(decrypted_message)
+
+
+def OptionMenu():
+    private_key = start_private_key()
+    print("请选择操作：")
+    print("1.加密图片")
+    print("2.解密图片")
+    option = int(input("请输入选项："))
+    if option == 1:
+        public_key_name = load_public_key_name()
+        public_key = load_public_key(public_key_name)
+        encode_message2img(private_key, public_key)
+        print("图片保存在output文件夹")
+    elif option == 2:
+        public_key_name = load_public_key_name()
+        public_key = load_public_key(public_key_name)
+        decode_img2message(private_key, public_key)
+    else:
+        print("无效的选项")

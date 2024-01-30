@@ -94,7 +94,7 @@ def load_private_key(key_name):
 
 # 读取公钥
 def load_public_key(key_name):
-    public_key_path = key_path + key_name + '_public_key.pem'
+    public_key_path = key_path + key_name
     with open(public_key_path, "rb") as f:
         public_key = f.read()
     return public_key
