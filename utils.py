@@ -1,6 +1,7 @@
 from PIL import Image
 import os
-import glob
+from glob import glob
+from datetime import datetime
 from constants import *
 from RSA import *
 from config import *
@@ -59,7 +60,14 @@ class ImageProcessor:
                     pixel[0] = (pixel[0] & 0xFE) | int(binary_ends[index], 2)  # 设置红色通道的最低位
                     pixels[x, y] = tuple(pixel)
                     index += 1
-            output_image_path = output_path + self.name + "_out.png"
+            
+            # 获取当前时间
+            current_time = datetime.now()
+
+            # 格式化为指定格式
+            formatted_time = current_time.strftime('%y%m%d%H%M%S')
+            
+            output_image_path = output_path + self.name + "_" + formatted_time + ".png"
 
             self.image.save(output_image_path)
 
@@ -116,7 +124,7 @@ def delete_temp_files():
     pattern = os.path.join(current_directory, '*.tem')
 
     # 使用glob.glob查找匹配的文件列表
-    temp_files = glob.glob(pattern)
+    temp_files = glob(pattern)
 
     # 循环遍历并删除每个文件
     for file_path in temp_files:
@@ -171,7 +179,7 @@ def read_binary_message(binary_end):
 def scan_img():
     img_list = []
     for file in os.listdir(input_path):
-        if file.endswith(".png") or file.endswith(".jpg") or file.endswith(".jpeg") or file.endswith(".bmp"):
+        if file.endswith(".png") or file.endswith(".jpg") or file.endswith(".jpeg") or file.endswith(".bmp") or file.endswith(".tif"):
             img_list.append(file)
     return img_list
 
@@ -216,7 +224,7 @@ ______             _     _                      _____ _ _   _
 | |_/ | (_| | (_) | |_) | | | | (_| | | | |    /\__/ | | |_| | | |
 \____/ \__,_|\___/|_.__/|_| |_|\__,_|_| |_|    \____/|_|\__|_| |_|                                                                                                                              
 
-Version：0.1.2
+Version：0.1.5
           
           """)
 
@@ -271,3 +279,15 @@ def OptionMenu():
         decode_img2message(private_key, public_key)
     else:
         print("无效的选项")
+
+def standing_by():
+    input("按下任意键结束程序...")
+
+
+def main():
+    start_folder_check()
+    config_check()
+    welcome()
+    OptionMenu()
+    delete_temp_files()
+    standing_by()

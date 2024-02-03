@@ -4,6 +4,7 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.backends import default_backend
 import os
+from ast import literal_eval
 from constants import *
 from config import *
 
@@ -26,7 +27,7 @@ def encrypt_with_public_key(message, public_key):
 
 # 使用私钥解密消息
 def decrypt_with_private_key(encrypted_message_str, private_key):
-    encrypted_message = eval(encrypted_message_str)
+    encrypted_message = literal_eval(encrypted_message_str)
     key = RSA.import_key(private_key)
     cipher = PKCS1_OAEP.new(key)
     decrypted_message = cipher.decrypt(encrypted_message).decode()
@@ -57,7 +58,7 @@ def verify_signature(message, signature_bytes, public_key_bytes):
         public_key_bytes,
         backend=default_backend()
     )
-    signature = eval(signature_bytes)
+    signature = literal_eval(signature_bytes)
     try:
         public_key.verify(
             signature,
